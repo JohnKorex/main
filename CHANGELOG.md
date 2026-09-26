@@ -15,6 +15,7 @@
   paths are exempt; rejections are counted in admission-rejection metrics and the
   origin value is never logged.
 - Published circuit artifact provenance (`zk/circuit.provenance.json`) with `write-provenance` / `verify-provenance` gates that bind lock-declared circuit sources without compiling ACIR (#376).
+- Added issuer trust-state badges to the verification portal and Evidence Studio. The frontend now reads `get_issuer` from the registry and resolves a record's issuer to one of nine stable states (`trusted`, `revoked`, `unknown`, `expired`, `unsupported`, `malformed`, `oversized`, `unavailable`, `checking`). Address shape is validated before any registry read, an unreadable registry is reported as `unavailable` rather than as `unknown`, and the badge surfaces only the issuer address already public on chain. See `frontend/src/provenance/issuerTrust.ts`.
 - Added a dependency pin and lockfile gate (`devx/check_dependency_pins.py`, wired into the release gate): pip requirements must be exactly pinned, npm lockfiles must match their manifests, cargo locks must resolve every workspace dependency, and the Noir toolchain lock must pin concrete compiler versions. See `docs/dependency-pins.md`. Closes #391.
 - Domain-separated proof-cache keys in the backend verifier cache (#373): keys
   are SHA-256 digests over the versioned `harpocrates:verifier-cache:v1` domain
