@@ -14,6 +14,7 @@
   Requests without an `Origin` header and the `/health`, `/ready`, and `/metrics`
   paths are exempt; rejections are counted in admission-rejection metrics and the
   origin value is never logged.
+- Published circuit artifact provenance (`zk/circuit.provenance.json`) with `write-provenance` / `verify-provenance` gates that bind lock-declared circuit sources without compiling ACIR (#376).
 - Added a dependency pin and lockfile gate (`devx/check_dependency_pins.py`, wired into the release gate): pip requirements must be exactly pinned, npm lockfiles must match their manifests, cargo locks must resolve every workspace dependency, and the Noir toolchain lock must pin concrete compiler versions. See `docs/dependency-pins.md`. Closes #391.
 - Domain-separated proof-cache keys in the backend verifier cache (#373): keys
   are SHA-256 digests over the versioned `harpocrates:verifier-cache:v1` domain
