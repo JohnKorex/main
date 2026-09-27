@@ -1,17 +1,48 @@
+import pytest
+
 from verification_receipt import build_verification_receipt
 
 
-def test_receipt_has_stable_public_shape():
-    receipt = build_verification_receipt(evidence_digest="a" * 64, schema_hash="b" * 64, request_id="req-123")
-    assert receipt["protocol"] == "harpocrates-verification-receipt"
-    assert receipt["version"] == 1
-    assert receipt["status"] == "accepted"
-    assert receipt["verification_method"] == "selective_disclosure"
+def context() -> dict[str, object]:
+    return {
+        "proofId": "a" * 64,
+        "videoHash": "b" * 64,
+        "metadataHash": "c" * 64,
+        "tier": "source",
+        "networkPassphrase": "Test SDF Network ; September 2015",
+        "contractId": "C" + "d" * 55,
+        "ledgerSequence": 42,
+        "transactionHash": "e" * 64,
+        "circuitVersion": "1",
+        "verifierVersion": "2026.09",
+    }
+
+
+def test_receipt_matches_the_frontend_unsigned_model():
+    receipt = build_verification_receipt(context())
+
+    assert receipt["result"] == "unverified"
+    assert receipt["proofId"] == "a" * 64
+    assert receipt["videoHash"] == "b" * 64
+    assert receipt["metadataHash"] == "c" * 64
+    assert receipt["ledgerSequence"] == 42
+    assert "protocol" not in receipt
+    assert "signature" not in receipt
     assert "proof" not in receipt
-    assert "public_inputs" not in receipt
 
 
-def test_receipt_can_explain_an_unverified_result():
-    receipt = build_verification_receipt(evidence_digest="a" * 64, schema_hash=None, request_id="req-456", status="unverified", reason_code="SCHEMA_NOT_FOUND")
-    assert receipt["schema_hash"] is None
-    assert receipt["reason_code"] == "SCHEMA_NOT_FOUND"
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [("proofId", "short"), ("transactionHash", "not-hex")],
+)
+def test_rejects_invalid_digest_fields(field: str, value: str):
+    invalid = context()
+    invalid[field] = value
+
+    with pytest.raises(ValueError, match=field):
+        build_verification_receipt(invalid)
+
+
+def test_rejects_incomplete_context_without_inventing_receipt_fields():
+    with pytest.raises(ValueError, match="videoHash"):
+        build_verification_receipt({"proofId": "a" * 64})

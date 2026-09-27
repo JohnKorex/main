@@ -1529,17 +1529,20 @@ def create_app() -> Flask:
         if err is not None:
             return jsonify({"error": err}), 400
 
-        receipt = build_verification_receipt(
-            evidence_digest=payload["evidenceDigest"],
-            schema_hash=payload.get("schemaHash"),
-            request_id=request_id(),
-        )
-        return jsonify({
+        response = {
             "ok": True,
             "message": "Selective disclosure proof submission accepted.",
             "note": "On-chain verification must be performed via verify_selective_disclosure on the registry contract.",
-            "verificationReceipt": receipt,
-        })
+        }
+        receipt_context = payload.get("receiptContext")
+        if receipt_context is not None:
+            if not isinstance(receipt_context, dict):
+                return jsonify({"error": "receiptContext must be a JSON object"}), 400
+            try:
+                response["verificationReceipt"] = build_verification_receipt(receipt_context)
+            except ValueError as exc:
+                return jsonify({"error": str(exc)}), 400
+        return jsonify(response)
 
     # -----------------------------------------------------------------------
     # C2PA interoperability
